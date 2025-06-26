@@ -2,193 +2,171 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <title>DireitoFácil – CNIS</title>
+  <title>DireitoFácil – CNIS PDF</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
-    body { font-family: 'Inter', sans-serif; background: #f3f6f9; padding-top: 65px; }
+    body { font-family: sans-serif; background: #f5f8fa; padding-top: 65px; }
     .navbar { background-color: #1a2d48; }
     .navbar-brand, .nav-link { color: white !important; }
-    .card { padding: 30px; border-radius: 10px; box-shadow: 0 0 10px #ccc; background: white; }
-    .cliente-info { background: #e9f1fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; }
+    .card { background: #fff; border-radius: 10px; padding: 25px; box-shadow: 0 0 10px #ccc; }
+    .cliente-info { background: #eef3f8; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
     .badge-ok { background-color: #198754; }
     .badge-aviso { background-color: #ffc107; color: #000; }
     .badge-erro { background-color: #dc3545; }
-    .flex-container { display: flex; gap: 30px; flex-wrap: wrap; }
-    .painel-lateral {
-      min-width: 280px;
-      max-width: 300px;
-      background: #ffffff;
-      border: 1px solid #ddd;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 6px rgba(0,0,0,0.05);
-    }
+    .painel-lateral { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; }
   </style>
 </head>
 <body>
-
 <nav class="navbar fixed-top navbar-expand-lg shadow">
   <div class="container-fluid">
     <a class="navbar-brand" href="painel.html">⚖️ DireitoFácil</a>
-    <button class="navbar-toggler bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarMenu">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="index.html">Início</a></li>
-        <li class="nav-item"><a class="nav-link" href="cadastro.html">Cadastro</a></li>
-        <li class="nav-item"><a class="nav-link" href="escritorio.html">Escritório</a></li>
-        <li class="nav-item"><a class="nav-link" href="cnis.html">CNIS</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Jurídico</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Relatórios</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">Ferramentas</a></li>
-      </ul>
-    </div>
   </div>
 </nav>
 
 <div class="container mt-4">
   <div class="card">
-    <h3 class="mb-4">📂 Análise do CNIS</h3>
+    <h3 class="mb-3">📂 Análise do CNIS (PDF)</h3>
 
     <div class="cliente-info">
       <strong>👤 Nome:</strong> Paulo Cesar Ribeiro<br>
-      <strong>📅 Data de nascimento:</strong> 20/12/1969<br>
-      <strong>🔢 Idade:</strong> 53 anos, 9 meses e 4 dias<br>
-      <strong>⚧ Sexo:</strong> Masculino
+      <strong>📅 Nascimento:</strong> 20/12/1969<br>
+      <strong>🧮 Idade:</strong> 53 anos, 9 meses e 4 dias
     </div>
 
     <div class="mb-3">
-      <label class="form-label"><img src="https://cdn-icons-png.flaticon.com/512/3580/3580283.png" width="24"> Upload do extrato CNIS (.txt)</label>
-      <input type="file" class="form-control" id="uploadCnis" accept=".txt" />
+      <label class="form-label">Deseja usar o CNIS já importado ou fazer upload manual?</label>
+      <select class="form-select" id="opcaoFonte">
+        <option value="">Selecione uma opção</option>
+        <option value="importado">Usar CNIS importado no cadastro</option>
+        <option value="manual">Fazer upload manual</option>
+      </select>
     </div>
 
-    <button class="btn btn-primary" onclick="lerCnis()">🔍 Analisar Extrato</button>
-    <div class="alert alert-success mt-3 d-none" id="msgAnalise">✅ Análise concluída com sucesso!</div>
+    <div class="mb-3 d-none" id="uploadManual">
+      <label class="form-label">Upload do CNIS (PDF do INSS):</label>
+      <input type="file" class="form-control" id="pdfInput" accept="application/pdf" />
+    </div>
 
-    <div class="mt-4 d-none flex-container" id="resultadoAnalise">
+    <button class="btn btn-primary" onclick="iniciarAnalise()">🔍 Analisar CNIS</button>
+
+    <div class="alert alert-success mt-3 d-none" id="msgSucesso">✅ Análise concluída!</div>
+
+    <div class="mt-4 d-none" id="resultado">
       <div id="relatorioCnis">
-
-        <div style="flex: 1 1 60%;">
-          <h5>📊 Resultado da Análise</h5>
-          <table class="table table-bordered">
-            <thead class="table-light">
-              <tr>
-                <th>Empresa</th>
-                <th>Período</th>
-                <th>Remuneração</th>
-                <th>Status</th>
-                <th>Ação</th>
-              </tr>
-            </thead>
-            <tbody id="tabelaResultado"></tbody>
-          </table>
-          <div class="mt-3" id="resumoTempo"></div>
-        </div>
-
-        <div class="painel-lateral">
-          <h6 class="mb-3">🧮 Tempo por Empregador</h6>
+        <h5>📊 Resultado da Análise</h5>
+        <table class="table table-bordered mt-3">
+          <thead class="table-light">
+            <tr>
+              <th>Empresa</th><th>Período</th><th>Remuneração</th><th>Status</th><th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaResultado"></tbody>
+        </table>
+        <div class="mt-2" id="resumoTempo"></div>
+        <div class="mt-4 painel-lateral">
+          <h6>⏱️ Tempo por Empregador</h6>
           <ul class="list-group small" id="tempoEmpregador"></ul>
         </div>
-
       </div>
-
-      <button class="btn btn-success mt-3" onclick="gerarRelatorioPDF()">📄 Gerar Relatório em PDF</button>
+      <button class="btn btn-success mt-3" onclick="gerarPDF()">📄 Gerar PDF</button>
     </div>
 
     <div class="mt-4">
-      <a href="painel.html" class="btn btn-outline-secondary">🔙 Voltar ao Menu Principal</a>
+      <a href="painel.html" class="btn btn-outline-secondary">🔙 Voltar ao menu</a>
     </div>
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
-function gerarRelatorioPDF() {
-  const relatorio = document.getElementById("relatorioCnis");
-  const opt = {
-    margin: 0.5,
-    filename: 'relatorio_cnis.pdf',
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-  };
-  html2pdf().set(opt).from(relatorio).save();
+document.getElementById("opcaoFonte").addEventListener("change", function () {
+  document.getElementById("uploadManual").classList.toggle("d-none", this.value !== "manual");
+});
+
+function iniciarAnalise() {
+  const opcao = document.getElementById("opcaoFonte").value;
+  if (opcao === "importado") {
+    // Simulação: CNIS importado já salvo
+    const conteudo = `
+EMPRESA: Supermercado Brasil
+PERIODO: 01/2010 a 12/2011
+REMUNERACAO: 1500.00
+EMPRESA: Indústria Sul
+PERIODO: 01/2012 a 03/2013
+REMUNERACAO: 7800.00
+EMPRESA: Transportes X
+PERIODO: 05/2014 a 06/2014
+REMUNERACAO: 0.00`;
+    processarCNIS(conteudo);
+  } else if (opcao === "manual") {
+    const file = document.getElementById("pdfInput").files[0];
+    if (!file) return alert("Selecione um PDF.");
+    const reader = new FileReader();
+    reader.onload = function () {
+      const typedarray = new Uint8Array(reader.result);
+      pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+        pdf.getPage(1).then(page => {
+          page.getTextContent().then(text => {
+            const txt = text.items.map(item => item.str).join("\n");
+            processarCNIS(txt);
+          });
+        });
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    alert("Escolha uma opção para continuar.");
+  }
 }
 
-function lerCnis() {
-  const arquivo = document.getElementById("uploadCnis").files[0];
-  if (!arquivo) return alert("Selecione um arquivo TXT!");
+function processarCNIS(conteudo) {
+  const linhas = conteudo.split('\n');
+  let empresa = '', periodo = '', salario = 0;
+  let totalValidos = 0, totalLacunas = 0;
+  const tempoEmp = {}, tabela = document.getElementById("tabelaResultado");
+  tabela.innerHTML = '';
+  document.getElementById("tempoEmpregador").innerHTML = '';
 
-  const leitor = new FileReader();
-  leitor.onload = function (e) {
-    const linhas = e.target.result.split('\n');
-    const tabela = document.getElementById("tabelaResultado");
-    const tempoEmp = {};
-    let totalValidos = 0;
-    let totalLacunas = 0;
-    let empresa = '', periodo = '', salario = '';
-
-    tabela.innerHTML = '';
-    document.getElementById("tempoEmpregador").innerHTML = '';
-
-    linhas.forEach(linha => {
-      if (linha.startsWith("EMPRESA:")) empresa = linha.split("EMPRESA:")[1].trim();
-      if (linha.startsWith("PERIODO:")) periodo = linha.split("PERIODO:")[1].trim();
-      if (linha.startsWith("REMUNERACAO:")) {
-        salario = parseFloat(linha.split("REMUNERACAO:")[1].trim());
-        const [inicio, fim] = periodo.split(' a ');
-        const meses = calcularMeses(inicio, fim);
-
-        let status = '', acao = '';
-        if (salario === 0) {
-          totalLacunas += meses;
-          status = '<span class="badge badge-erro">Sem remuneração</span>';
-          acao = 'Recolher em aberto';
-        } else if (salario > 7500) {
-          totalValidos += meses;
-          status = '<span class="badge badge-aviso">Acima do teto</span>';
-          acao = 'Solicitar reembolso';
-          tempoEmp[empresa] = (tempoEmp[empresa] || 0) + meses;
-        } else {
-          totalValidos += meses;
-          status = '<span class="badge badge-ok">OK</span>';
-          acao = '—';
-          tempoEmp[empresa] = (tempoEmp[empresa] || 0) + meses;
-        }
-
-        const linhaHTML = `
-          <tr>
-            <td>${empresa}</td>
-            <td>${periodo}</td>
-            <td>R$ ${salario.toFixed(2)}</td>
-            <td>${status}</td>
-            <td>${acao}</td>
-          </tr>`;
-        tabela.innerHTML += linhaHTML;
+  linhas.forEach(l => {
+    if (l.startsWith("EMPRESA:")) empresa = l.split("EMPRESA:")[1].trim();
+    if (l.startsWith("PERIODO:")) periodo = l.split("PERIODO:")[1].trim();
+    if (l.startsWith("REMUNERACAO:")) {
+      salario = parseFloat(l.split("REMUNERACAO:")[1].trim());
+      const [inicio, fim] = periodo.split(' a ');
+      const meses = calcularMeses(inicio, fim);
+      let status = '', acao = '';
+      if (salario === 0) {
+        totalLacunas += meses;
+        status = '<span class="badge badge-erro">Sem remuneração</span>';
+        acao = 'Recolher';
+      } else if (salario > 7500) {
+        totalValidos += meses;
+        status = '<span class="badge badge-aviso">Acima do teto</span>';
+        acao = 'Reembolso';
+      } else {
+        totalValidos += meses;
+        status = '<span class="badge badge-ok">OK</span>';
+        acao = '—';
       }
-    });
+      tempoEmp[empresa] = (tempoEmp[empresa] || 0) + meses;
+      tabela.innerHTML += `<tr><td>${empresa}</td><td>${periodo}</td><td>R$ ${salario.toFixed(2)}</td><td>${status}</td><td>${acao}</td></tr>`;
+    }
+  });
 
-    document.getElementById("msgAnalise").classList.remove("d-none");
-    document.getElementById("resultadoAnalise").classList.remove("d-none");
+  document.getElementById("resumoTempo").innerHTML = `
+    <strong>🟢 Contribuições:</strong> ${converterMeses(totalValidos)}<br>
+    <strong>🔴 Lacunas:</strong> ${converterMeses(totalLacunas)}`;
+  Object.entries(tempoEmp).forEach(([emp, meses]) => {
+    const li = document.createElement("li");
+    li.className = "list-group-item d-flex justify-content-between";
+    li.innerHTML = `<span>${emp}</span><span class="badge bg-primary">${converterMeses(meses)}</span>`;
+    document.getElementById("tempoEmpregador").appendChild(li);
+  });
 
-    const resumo = `
-      <strong>🟢 Tempo com contribuição:</strong> ${converterMeses(totalValidos)}<br>
-      <strong>🔴 Lacunas (sem contribuição):</strong> ${converterMeses(totalLacunas)}
-    `;
-    document.getElementById("resumoTempo").innerHTML = resumo;
-
-    const lista = document.getElementById("tempoEmpregador");
-    Object.entries(tempoEmp).forEach(([nome, meses]) => {
-      const item = document.createElement("li");
-      item.className = "list-group-item d-flex justify-content-between align-items-center";
-      item.innerHTML = `<span>${nome}</span> <span class="badge bg-primary">${converterMeses(meses)}</span>`;
-      lista.appendChild(item);
-    });
-  };
-  leitor.readAsText(arquivo);
+  document.getElementById("msgSucesso").classList.remove("d-none");
+  document.getElementById("resultado").classList.remove("d-none");
 }
 
 function calcularMeses(inicio, fim) {
@@ -196,11 +174,16 @@ function calcularMeses(inicio, fim) {
   const [m2, a2] = fim.split("/").map(Number);
   return (a2 - a1) * 12 + (m2 - m1) + 1;
 }
-
-function converterMeses(meses) {
-  const anos = Math.floor(meses / 12);
-  const resto = meses % 12;
-  return `${anos}a ${resto}m`;
+function converterMeses(m) {
+  return `${Math.floor(m / 12)}a ${m % 12}m`;
+}
+function gerarPDF() {
+  const relatorio = document.getElementById("relatorioCnis");
+  html2pdf().from(relatorio).set({
+    margin: 0.5,
+    filename: 'relatorio_cnis.pdf',
+    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+  }).save();
 }
 </script>
 
