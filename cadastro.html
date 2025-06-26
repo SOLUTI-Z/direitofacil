@@ -38,7 +38,6 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
-
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Cadastro</a>
           <ul class="dropdown-menu">
@@ -46,14 +45,12 @@
             <li><a class="dropdown-item" href="escritorio.html">🏢 Escritório</a></li>
           </ul>
         </li>
-
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">CNIS</a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="cnis.html">📂 Analisar CNIS</a></li>
           </ul>
         </li>
-
         <li class="nav-item"><a class="nav-link" href="juridico.html">Jurídico</a></li>
         <li class="nav-item"><a class="nav-link" href="relatorios.html">Relatórios</a></li>
         <li class="nav-item"><a class="nav-link" href="ferramentas.html">Ferramentas</a></li>
@@ -67,12 +64,10 @@
   <h2 class="mt-4">Cadastro de Cliente</h2>
 
   <div class="alert-cn mt-3">
-    ⚠️ Atenção: o upload do <strong>CNIS em PDF</strong> é essencial para análise da aposentadoria. Sem esse documento, o sistema não poderá simular corretamente os direitos previdenciários do cliente.
+    ⚠️ Faça o upload do <strong>CNIS (PDF)</strong> do cliente. Ele é essencial para realizar a análise da aposentadoria.
   </div>
 
-  <!-- Seu formulário de cadastro pode começar aqui -->
   <form>
-    <!-- Exemplo de campo -->
     <div class="mb-3">
       <label for="nome" class="form-label">Nome completo</label>
       <input type="text" class="form-control" id="nome" placeholder="Digite o nome completo">
@@ -83,17 +78,109 @@
       <input type="text" class="form-control" id="cpf" placeholder="000.000.000-00">
     </div>
 
-    <!-- Upload do CNIS -->
     <div class="mb-3">
-      <label class="form-label">Importar CNIS (PDF do INSS):</label>
-      <input type="file" class="form-control" accept="application/pdf" />
+      <label for="nascimento" class="form-label">Data de nascimento</label>
+      <input type="text" class="form-control" id="nascimento" placeholder="DD/MM/AAAA">
+    </div>
+
+    <div class="mb-3">
+      <label for="idade" class="form-label">Idade</label>
+      <input type="text" class="form-control" id="idade" disabled>
+    </div>
+
+    <div class="mb-3">
+      <label for="mae" class="form-label">Nome da mãe</label>
+      <input type="text" class="form-control" id="mae" placeholder="Digite o nome da mãe">
+    </div>
+
+    <div class="mb-3">
+      <label for="email" class="form-label">E-mail</label>
+      <input type="email" class="form-control" id="email" placeholder="exemplo@email.com">
+    </div>
+
+    <div class="mb-3">
+      <label for="telefone" class="form-label">Telefone</label>
+      <input type="text" class="form-control" id="telefone" placeholder="(00) 00000-0000">
+    </div>
+
+    <div class="mb-3">
+      <label for="cep" class="form-label">CEP</label>
+      <input type="text" class="form-control" id="cep" placeholder="00000-000">
+    </div>
+
+    <div class="mb-3">
+      <label for="endereco" class="form-label">Endereço</label>
+      <input type="text" class="form-control" id="endereco" placeholder="Rua / Avenida">
+    </div>
+
+    <div class="mb-3">
+      <label for="numero" class="form-label">Número</label>
+      <input type="text" class="form-control" id="numero" placeholder="123">
+    </div>
+
+    <div class="mb-3">
+      <label for="bairro" class="form-label">Bairro</label>
+      <input type="text" class="form-control" id="bairro" placeholder="Bairro">
+    </div>
+
+    <div class="mb-3">
+      <label for="cidade" class="form-label">Cidade</label>
+      <input type="text" class="form-control" id="cidade" placeholder="Cidade">
+    </div>
+
+    <div class="mb-3">
+      <label for="estado" class="form-label">Estado</label>
+      <input type="text" class="form-control" id="estado" placeholder="UF">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Upload do CNIS (PDF)</label>
+      <input type="file" class="form-control" id="cnis" accept="application/pdf" />
     </div>
 
     <button type="submit" class="btn btn-primary">Salvar</button>
+    <a href="painel.html" class="btn btn-secondary ms-2">Voltar ao menu</a>
   </form>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function () {
+  $('#cpf').mask('000.000.000-00');
+  $('#nascimento').mask('00/00/0000');
+  $('#telefone').mask('(00) 00000-0000');
+  $('#cep').mask('00000-000');
+
+  $('#nascimento').on('blur', function () {
+    const nasc = $(this).val().split('/');
+    if (nasc.length === 3) {
+      const nascData = new Date(`${nasc[2]}-${nasc[1]}-${nasc[0]}`);
+      const hoje = new Date();
+      let idade = hoje.getFullYear() - nascData.getFullYear();
+      const m = hoje.getMonth() - nascData.getMonth();
+      if (m < 0 || (m === 0 && hoje.getDate() < nascData.getDate())) {
+        idade--;
+      }
+      $('#idade').val(idade + ' anos');
+    }
+  });
+
+  $('#cep').on('blur', function () {
+    const cep = $(this).val().replace('-', '');
+    fetch(`https://viacep.com.br/ws/${cep}/json/`)
+      .then(res => res.json())
+      .then(data => {
+        $('#endereco').val(data.logradouro || '');
+        $('#bairro').val(data.bairro || '');
+        $('#cidade').val(data.localidade || '');
+        $('#estado').val(data.uf || '');
+      });
+  });
+});
+</script>
 </body>
 </html>
 
