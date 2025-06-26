@@ -11,13 +11,14 @@
     .navbar { background-color: #1a2d48; }
     .navbar-brand, .nav-link { color: white !important; }
     .card { padding: 30px; border-radius: 10px; box-shadow: 0 0 10px #ccc; background: white; }
-    .badge-pendencia { background-color: #dc3545; }
+    .cliente-info { background: #e9f1fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; }
     .badge-ok { background-color: #198754; }
+    .badge-aviso { background-color: #ffc107; color: #000; }
+    .badge-erro { background-color: #dc3545; }
   </style>
 </head>
 <body>
 
-<!-- Navbar -->
 <nav class="navbar fixed-top navbar-expand-lg shadow">
   <div class="container-fluid">
     <a class="navbar-brand" href="painel.html">⚖️ DireitoFácil</a>
@@ -38,57 +39,38 @@
   </div>
 </nav>
 
-<!-- Conteúdo -->
 <div class="container mt-4">
   <div class="card">
     <h3 class="mb-4">📂 Análise do CNIS</h3>
 
+    <div class="cliente-info">
+      <strong>👤 Nome:</strong> Paulo Cesar Ribeiro<br>
+      <strong>📅 Data de nascimento:</strong> 20/12/1969<br>
+      <strong>🔢 Idade:</strong> 53 anos, 9 meses e 4 dias<br>
+      <strong>⚧ Sexo:</strong> Masculino
+    </div>
+
     <div class="mb-3">
-      <label>Upload do extrato CNIS (PDF ou TXT)</label>
-      <input type="file" class="form-control" id="uploadCnis" />
+      <label class="form-label"><img src="https://cdn-icons-png.flaticon.com/512/3580/3580283.png" width="24"> Upload do extrato CNIS (.txt)</label>
+      <input type="file" class="form-control" id="uploadCnis" accept=".txt" />
     </div>
 
-    <div class="mt-3">
-      <button class="btn btn-primary" onclick="simularAnalise()">🔍 Analisar Extrato</button>
-    </div>
-
-    <div class="alert alert-success mt-4 d-none" id="sucesso">✅ Análise concluída!</div>
+    <button class="btn btn-primary" onclick="lerCnis()">🔍 Analisar Extrato</button>
+    <div class="alert alert-success mt-3 d-none" id="msgAnalise">✅ Análise concluída com sucesso!</div>
 
     <div class="mt-4 d-none" id="resultadoAnalise">
-      <h5>Resumo de Vínculos</h5>
+      <h5>📊 Resultado da Análise</h5>
       <table class="table table-bordered">
         <thead class="table-light">
           <tr>
-            <th>Período</th>
             <th>Empresa</th>
+            <th>Período</th>
             <th>Remuneração</th>
             <th>Status</th>
             <th>Ação Sugerida</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td>01/2010 a 12/2011</td>
-            <td>Empresa A</td>
-            <td>R$ 1.500,00</td>
-            <td><span class="badge bg-success">OK</span></td>
-            <td>—</td>
-          </tr>
-          <tr>
-            <td>01/2012 a 03/2013</td>
-            <td>Empresa B</td>
-            <td>R$ 7.800,00</td>
-            <td><span class="badge bg-warning text-dark">Acima do teto</span></td>
-            <td>Solicitar reembolso</td>
-          </tr>
-          <tr>
-            <td>05/2014 a 06/2014</td>
-            <td>Empresa C</td>
-            <td>—</td>
-            <td><span class="badge bg-danger">Sem remuneração</span></td>
-            <td>Recolher em aberto</td>
-          </tr>
-        </tbody>
+        <tbody id="tabelaResultado"></tbody>
       </table>
 
       <div class="mt-4">
@@ -99,11 +81,55 @@
 </div>
 
 <script>
-  function simularAnalise() {
-    document.getElementById("sucesso").classList.remove("d-none");
+function lerCnis() {
+  const arquivo = document.getElementById("uploadCnis").files[0];
+  if (!arquivo) return alert("Selecione um arquivo TXT!");
+
+  const leitor = new FileReader();
+  leitor.onload = function (e) {
+    const linhas = e.target.result.split('\n');
+    const tabela = document.getElementById("tabelaResultado");
+    tabela.innerHTML = '';
+
+    let empresa = '', periodo = '', salario = '';
+
+    linhas.forEach(linha => {
+      if (linha.startsWith("EMPRESA:")) empresa = linha.split("EMPRESA:")[1].trim();
+      if (linha.startsWith("PERIODO:")) periodo = linha.split("PERIODO:")[1].trim();
+      if (linha.startsWith("REMUNERACAO:")) {
+        salario = parseFloat(linha.split("REMUNERACAO:")[1].trim());
+        let status = '', acao = '';
+
+        if (salario === 0) {
+          status = '<span class="badge badge-erro">Sem remuneração</span>';
+          acao = 'Recolher em aberto';
+        } else if (salario > 7500) {
+          status = '<span class="badge badge-aviso">Acima do teto</span>';
+          acao = 'Solicitar reembolso';
+        } else {
+          status = '<span class="badge badge-ok">OK</span>';
+          acao = '—';
+        }
+
+        const linhaHTML = `
+          <tr>
+            <td>${empresa}</td>
+            <td>${periodo}</td>
+            <td>R$ ${salario.toFixed(2)}</td>
+            <td>${status}</td>
+            <td>${acao}</td>
+          </tr>`;
+        tabela.innerHTML += linhaHTML;
+      }
+    });
+
+    document.getElementById("msgAnalise").classList.remove("d-none");
     document.getElementById("resultadoAnalise").classList.remove("d-none");
-  }
+  };
+  leitor.readAsText(arquivo);
+}
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
